@@ -1,0 +1,9 @@
+File and folders
+
+    runaway-overview.ppt: a simple overview
+
+    ./runaway2d/       : 2d time-dependent RFP solver
+    ./runaway2d-stead/ : 2d steady state RFP solver
+    ./scripts/         : python plotting scripts
+
+There is a README in ./runaway2d/Debug/ describing how to compile, run and visualize 

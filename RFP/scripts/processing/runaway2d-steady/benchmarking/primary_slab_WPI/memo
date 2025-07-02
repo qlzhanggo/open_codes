@@ -1,0 +1,20 @@
+This folder contains material to help benchmark the following runaway electron RFP case
+
+Primary steady state distribution with Wave Particle Interaction
+Slab geometry
+Z = 1;
+E = 3.0E_c;
+v = 0.1c;
+alpha(sr) = 0.05 and 0.2;
+
+w0 = 0.25; ?? NG: Need to confirm how Zehua's \vareps_0 translates to this variable
+k10 = 0.2;
+k20 = 0.1;
+dk10 = 0.05;
+wpe = 1.;
+
+Graphs of previously published results are included here to help confirm accuracy of the result. Guo et al. - 2018 - Control of runaway electron energy using externally injected whistler waves 10.1063/1.5019381
+
+
+Postprocessing can be done with the generic script "plot.py" in the main scripts directory. 
+

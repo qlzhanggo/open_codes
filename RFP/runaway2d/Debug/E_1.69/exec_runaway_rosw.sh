@@ -1,0 +1,1 @@
+mpirun -np 6 ../runaway -fk_type slab_chiu -fdjac -snes_type ksponly -snes_mf_operator -ksp_type gmres -ksp_gmres_restart 150 -ksp_rtol 1e-9 -ksp_atol 1e-24 -ksp_max_it 1000 -ksp_monitor_true_residual -dt 0.0001 -ftime 2 -skip 0.1 -ts_type rosw -ts_rtol 1e-14 -ts_adapt_dt_min 1e-04 -ts_adapt_dt_max 0.05 -ts_monitor

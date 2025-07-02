@@ -1,0 +1,40 @@
+===================================================
+Install the RFP code 
+
+Step1: install petsc with superlu_dist
+
+Step2: download boost package to $HOME/software
+
+Step3: download eigen package to $HOME/software
+
+Step4: add the following to makefile 
+#pn*** is LANL laptop host name
+else ifneq ($(findstring pn18,$(HOST)), )
+   $(info The host is $(HOST))
+   PETSC_DIR := $(HOME)/software/petsc-3.10.2
+   PETSC_ARCH := macx
+   MPI_DIR := $(PETSC_DIR)/$(PETSC_ARCH)
+   BOOST_DIR := $(HOME)/software/boost_1_69_0
+   EIGEN_DIR := $(HOME)/software/eigen
+   CSTD := c++11
+endif
+===================================================
+
+===================================================
+test the steady state example (here we use jfnk and superlu):
+
+$ make 
+$ cd E_3
+$ mpirun -np 6 ../runaway -fk_type slab -fdjac -atol 1e-14 -rtol 1e-12 -stol 1e-14 -snes_max_it 100 -snes_max_funcs 20000 -maxit 0 -snes_type newtonls -snes_linesearch_type l2 -pc_type lu -pc_factor_mat_solver_type superlu_dist -ksp_type preonly -mat_superlu_dist_iterrefine -snes_monitor
+
+or we could use jfnk and gmres (inexact newton will also work)
+$ mpirun -np 6 ../runaway -fk_type slab -fdjac -atol 1e-14 -rtol 1e-12 -stol 1e-20 -snes_max_it 100 -snes_max_funcs 200000 -maxit 0 -snes_type newtonls -snes_linesearch_type l2 -snes_mf_operator -snes_max_linear_solve_fail 1000 -ksp_type gmres -ksp_gmres_restart 150 -ksprtol 2e-16 -kspatol 2e-16 -ksp_max_it 1000  -snes_monitor
+
+visualize
+$ python ../../../scripts/processing/runaway2d-steady/plot.py
+
+
+We can also initialize by reading a file (and compute F(u) using the flag -checkF)
+$ mpirun -np 6 ../runaway -fk_type slab -fdjac -atol 1e-14 -rtol 1e-14 -stol 1e-14 -snes_max_it 100 -snes_max_funcs 200000 -maxit 0 -snes_type newtonls -snes_linesearch_type l2 -snes_mf_operator -snes_max_linear_solve_fail 1000 -ksp_type gmres -ksp_gmres_restart 150 -ksprtol 2e-16 -kspatol 2e-16 -ksp_max_it 1000  -snes_monitor -file soln.dat (-checkF)
+===================================================
+

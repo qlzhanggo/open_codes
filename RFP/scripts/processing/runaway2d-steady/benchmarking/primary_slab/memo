@@ -1,0 +1,10 @@
+This folder contains material to help benchmark the following runaway electron RFP case
+
+Primary steady state distribution
+Slab geometry
+Z = 5;
+E = 3.5E_c;
+v = 0.1c;
+alpha(sr) = 0.1;
+
+Graphs of previous results are included, alongside the benchmarking script "benchmark_primary_slab.py" which calculates O and X points, as well as the bump location in f_p. These can guide us to determine if the code is still producing good results. 

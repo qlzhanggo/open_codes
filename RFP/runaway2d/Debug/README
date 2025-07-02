@@ -1,0 +1,78 @@
+=
+===============To compile the code===================
+Step 1
+    Download eigen and boost. It needs some functions in eigen and boost (no need to compile those)
+    $ git clone git@gitlab.com:petsc/petsc.git 
+    $ git fetch origin
+    $ git checkout johann/bf
+    $ ./configure --with-mpi-dir=/Users/qtang/.brew --with-superlu_dist=1 --download-superlu_dist --with-p4est=1 --download-p4est --with-p4est-debugging=1 --with-shared-libraries --with-64-bit-indices=1 --download-zlib --download-hypre
+    $ make PETSC_DIR=/Users/qtang/software/petsc.master PETSC_ARCH=macx all
+    $ make PETSC_DIR=/Users/qtang/software/petsc.master PETSC_ARCH=macx check
+Step 2
+    Edit makefile by changing the following flag:
+    PETSC_DIR, PETSC_ARCH, MPI_DIR, BOOST_DIR, EIGEN_DIR and the line ($(findstring pn,$(HOST)), )
+    (LANL laptops have a hostname of "pn***.lanl.gov")
+Step 3
+    $ make all -j
+
+====================To run the code=====================
+==============compare full implicit vs imex=============
+    $ cd E_1.69
+Test 1: fully implicit bdf (use RP source; ok)
+    $ mpirun -np 6 ../runaway -fk_type slab_rp -fdjac  -snes_type ksponly -snes_mf_operator -ksp_type gmres -ksp_gmres_restart 150 -ksp_rtol 1e-9 -ksp_atol 1e-24 -ksp_max_it 1000 -ksp_monitor_true_residual -dt 0.0001 -ftime 2 -skip 0.1 -ts_type bdf -ts_rtol 1e-9 -ts_adapt_dt_min 1e-04 -ts_adapt_dt_max 0.05 -ts_monitor -flag_df
+
+Test 2: fully implicit bdf (use Chiu source; ok)
+    $ mpirun -np 6 ../runaway -fk_type slab_chiu -fdjac -snes_type ksponly -snes_mf_operator -ksp_type gmres -ksp_gmres_restart 150 -ksp_rtol 1e-9 -ksp_atol 1e-24 -ksp_max_it 1000 -ksp_monitor_true_residual -dt 0.0001 -ftime 2 -skip 0.1 -ts_type bdf -ts_rtol 1e-9 -ts_adapt_dt_min 1e-04 -ts_adapt_dt_max 0.05 -ts_monitor -flag_df
+
+Test 3: imex rosw (ok)
+    $ mpirun -np 6 ../runaway -fk_type slab_chiu -fdjac -snes_type ksponly -snes_mf_operator -ksp_type gmres -ksp_gmres_restart 150 -ksp_rtol 1e-9 -ksp_atol 1e-24 -ksp_max_it 1000 -ksp_monitor_true_residual -dt 0.0001 -ftime 2 -skip 0.1 -ts_type rosw -ts_rtol 1e-14 -ts_adapt_dt_min 1e-04 -ts_adapt_dt_max 0.05 -ts_monitor -flag_df
+
+Test 4: fully implicit DIRK (ok)
+    $ mpirun -np 6 ../runaway -fk_type slab_chiu -fdjac -snes_type ksponly -snes_mf_operator -ksp_type gmres -ksp_gmres_restart 150 -ksp_rtol 1e-9 -ksp_atol 1e-24 -ksp_max_it 1000 -ksp_monitor_true_residual -dt 0.0001 -ftime 2 -skip 0.1 -ts_type arkimex -ts_arkimex_type l2 -ts_arkimex_fully_implicit -ts_adapt_dt_min 1e-04 -ts_adapt_dt_max 0.02 -ts_rtol 1e-14 -ts_monitor -flag_df -flag_runaway
+
+(HPC test)
+$ srun -n 128 --cpu-bind=cores -c 2 ../runaway -fk_type slab_chiu -fdjac -snes_type ksponly -snes_mf_operator -ksp_type gmres -ksp_gmres_restart 150 -ksp_rtol 1e-9 -ksp_atol 1e-24 -ksp_max_it 1000 -ksp_monitor_true_residual -dt 0.0001 -ftime 2 -skip 0.5 -ts_type arkimex -ts_arkimex_type l2 -ts_arkimex_fully_implicit -ts_adapt_dt_min 1e-04 -ts_adapt_dt_max 0.02 -ts_rtol 1e-14 -ts_monitor -flag_df -flag_runaway
+
+==================To visualize the solution===============
+$ python ../../../scripts/processing/runaway2d/plot.py -step 19 -petscint64
+$ python ../../../scripts/processing/runaway2d/plot_current.py
+
+==================To run self consistent model============
+$ mpirun -np 6 ../runaway -fk_type slab_chiu -fdjac -snes_type ksponly -snes_mf_operator -ksp_type gmres -ksp_gmres_restart 150 -ksp_rtol 1e-9 -ksp_atol 1e-24 -ksp_max_it 1000 -ksp_monitor_true_residual -dt 0.0001 -ftime 2 -skip 0.1 -ts_type bdf -ts_rtol 1e-9 -ts_adapt_dt_min 1e-04 -ts_adapt_dt_max 0.05 -ts_monitor -flag_df -eta 0.1 -mu0 10.0 -j_para 200.0
+
+(HPC test)
+$ srun -n 128 --cpu-bind=cores -c 2 ../runaway -fk_type slab_chiu -fdjac -snes_type ksponly -snes_mf_operator -ksp_type gmres -ksp_gmres_restart 150 -ksp_rtol 1e-9 -ksp_atol 1e-24 -ksp_max_it 1000 -ksp_monitor_true_residual -dt 0.0001 -ftime 2 -skip 0.1 -ts_type arkimex -ts_arkimex_type l2 -ts_arkimex_fully_implicit -ts_adapt_dt_min 1e-04 -ts_adapt_dt_max 0.02 -ts_rtol 1e-14 -ts_monitor -flag_df -eta 0.1 -mu0 10.0 -j_para 200.0
+
+=======================To clean up========================
+$ make myclean
+
+===================To adjust mesh/dofs=====================
+Adjust the following parameters in mesh.m 
+(the following parameters provide a grid of 160x69, which appears to be good):
+p0 = 3.0;
+dph = 0.4;
+dpl = 0.02;
+
+xi0 = -0.6;
+dxih = 0.05;
+dxil = 0.01;
+
+Note the mesh is a structured stretched grid for the domain [pmin, pmax]x[-1, 1]
+It is finest at (pmin, -1) and coarsest at (pmax, 1)
+
+The details of each paramters:
+p0:     center of stretched grid in p
+dph:    max dp
+dpl:    min dp
+        
+xi0 :   center of stretched grid in xi
+dxih:   max dxi
+dxil:   min dxi
+
+
+
+================== TODO =======================
+check the source term (plot)
+check the lower bound of the integral in knock on
+check the growth rate
+
